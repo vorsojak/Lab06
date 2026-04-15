@@ -20,7 +20,7 @@ def getListaAnni():
 
     res = []
     for row in cursor:
-        res.append(row)
+        res.append(row[0])
 
     cursor.close()
     cnx.close()
@@ -38,7 +38,7 @@ def getListaBrand():
 
     res = []
     for row in cursor:
-        res.append(row)
+        res.append(row[0])
 
     cursor.close()
     cnx.close()
@@ -47,7 +47,7 @@ def getListaBrand():
 
 def getListaRetailer():
     cnx = DBConnect.get_connection()
-    cursor = cnx.cursor()
+    cursor = cnx.cursor(dictionary=True)
 
     query = """select *
                 from go_sales.go_retailers gr"""
@@ -65,21 +65,21 @@ def getListaRetailer():
 
 def topVendite(anno, brand, retailer_code):
     cnx = DBConnect.get_connection()
-    cursor = cnx.cursor()
+    cursor = cnx.cursor(dictionary=True)
 
     query = """with yearly_summary as (
-                select gr.Retail_name, gp.Product, gp.Product_brand, Date, (Quantity * Unit_sale_price) as Ricavo
-                from go_daily_sales gds, go_products gp, go_retails gr
-                where gds.Retailer_code = gr.retailer_code and gds.Product_number = gp.Product__number
+                select gr.Retailer_name, gp.Product, gds.Date, (gds.Quantity * gds.Unit_sale_price) as Ricavo
+                from go_sales.go_daily_sales gds, go_sales.go_products gp, go_sales.go_retailers gr
+                where gds.Retailer_code = gr.retailer_code and gds.Product_number = gp.Product_number
                 and (%s is NULL or YEAR(date) = %s)
-                and (%s is NULL or Product_Brand = %s)
-                and (%s is NULL or REtailer_code = %s)
+                and (%s is NULL or gp.Product_brand = %s)
+                and (%s is NULL or gds.Retailer_code = %s)
             )
             select * from yearly_summary
-            order by Ricavo desc;
-            """
+            order by Ricavo desc;"""
 
-    cursor.execute(query, (anno, anno, brand, brand, retailer_code, retailer_code,))
+    params = (anno, anno, brand, brand, retailer_code, retailer_code)
+    cursor.execute(query, params)
 
     res = []
     for row in cursor:
@@ -88,3 +88,98 @@ def topVendite(anno, brand, retailer_code):
     cursor.close()
     cnx.close()
     return res
+
+
+def getGiroAffari(anno, brand, retailer_code):
+    cnx = DBConnect.get_connection()
+    cursor = cnx.cursor(dictionary=True)
+
+    query = """select sum(gds.Quantity * gds.Unit_sale_price) as giro_affari
+                from go_sales.go_daily_sales gds, go_sales.go_products gp, go_sales.go_retailers gr
+                where gds.Retailer_code = gr.retailer_code and gds.Product_number = gp.Product_number
+                and (%s is NULL or YEAR(date) = %s)
+                and (%s is NULL or gp.Product_brand = %s)
+                and (%s is NULL or gds.Retailer_code = %s)"""
+
+    params = (anno, anno, brand, brand, retailer_code, retailer_code)
+    cursor.execute(query, params)
+
+    res = []
+    for row in cursor:
+        res.append(row)
+
+    cursor.close()
+    cnx.close()
+    return res[0]
+
+def getNVendite(anno, brand, retailer_code):
+    cnx = DBConnect.get_connection()
+    cursor = cnx.cursor(dictionary=True)
+
+    query = """select count(*) as n_vendite
+                from go_sales.go_daily_sales gds, go_sales.go_products gp, go_sales.go_retailers gr
+                where gds.Retailer_code = gr.retailer_code and gds.Product_number = gp.Product_number
+                and (%s is NULL or YEAR(date) = %s)
+                and (%s is NULL or gp.Product_brand = %s)
+                and (%s is NULL or gds.Retailer_code = %s)"""
+
+    params = (anno, anno, brand, brand, retailer_code, retailer_code)
+    cursor.execute(query, params)
+
+    res = []
+    for row in cursor:
+        res.append(row)
+
+    cursor.close()
+    cnx.close()
+    return res[0]
+
+def getNRetailers(anno, brand, retailer_code):
+    cnx = DBConnect.get_connection()
+    cursor = cnx.cursor(dictionary=True)
+
+    query = """WITH retailers AS (
+                SELECT distinct gds.Retailer_code
+                FROM go_sales.go_products gp, go_sales.go_daily_sales gds 
+                WHERE gds.Product_number = gp.Product_number
+                and (%s is NULL or YEAR(date) = %s)
+                and (%s is NULL or gp.Product_brand = %s)
+                and (%s is NULL or gds.Retailer_code = %s)
+                )
+            SELECT COUNT(*) as n_retailers FROM retailers;"""
+
+    params = (anno, anno, brand, brand, retailer_code, retailer_code)
+    cursor.execute(query, params)
+
+    res = []
+    for row in cursor:
+        res.append(row)
+
+    cursor.close()
+    cnx.close()
+    return res[0]
+
+def getTotNProdotti(anno, brand, retailer_code):
+    cnx = DBConnect.get_connection()
+    cursor = cnx.cursor(dictionary=True)
+
+    query = """WITH prodotti AS (
+                SELECT distinct gds.Product_number
+                FROM go_sales.go_products gp, go_sales.go_daily_sales gds 
+                WHERE gds.Product_number = gp.Product_number
+                and (%s is NULL or YEAR(date) = %s)
+                and (%s is NULL or gp.Product_brand = %s)
+                and (%s is NULL or gds.Retailer_code = %s)
+                )
+            SELECT COUNT(*) as n_prodotti FROM prodotti;"""
+
+    params = (anno, anno, brand, brand, retailer_code, retailer_code)
+    cursor.execute(query, params)
+
+    res = []
+    for row in cursor:
+        res.append(row)
+
+    cursor.close()
+    cnx.close()
+    return res[0]

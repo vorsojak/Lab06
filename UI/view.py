@@ -8,7 +8,7 @@ class View(ft.UserControl):
         self._page = page
         self._page.title = "Lab06"
         self._page.horizontal_alignment = 'CENTER'
-        self._page.theme_mode = ft.ThemeMode.DARK
+        self._page.theme_mode = ft.ThemeMode.LIGHT
         # controller (it is not initialized. Must be initialized in the main, after the controller is created)
         self._controller = None
         # graphical elements
@@ -26,22 +26,17 @@ class View(ft.UserControl):
 
         self._lvOut = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
-        self._dd_anno = ft.Dropdown(value="anno", options=self._controller.get_lista_anni())
-        self._dd_brand = ft.Dropdown(value="brand", options=self._controller.get_lista_brand())
-        self._dd_retailer = ft.Dropdown(value="retailer", options=self._controller.get_lista_retailer())
-
+        self._dd_anno = ft.Dropdown(label="anno", options=self._controller.get_lista_anni())
+        self._dd_brand = ft.Dropdown(label="brand", options=self._controller.get_lista_brand())
+        self._dd_retailer = ft.Dropdown(label="retailer", options=self._controller.get_lista_retailer())
+        row1 = ft.Row([self._dd_anno, self._dd_brand, self._dd_retailer,
+                      ], alignment=ft.MainAxisAlignment.CENTER)
         self._btn_top_vendite = ft.ElevatedButton(text="Top vendite", on_click=self._controller.top_vendite)
         self._btn_analizza_vendite = ft.ElevatedButton(text="Analizza vendite", on_click=self._controller.analizza_vendite)
+        row2 = ft.Row([self._btn_top_vendite, self._btn_analizza_vendite],
+                      alignment=ft.MainAxisAlignment.CENTER)
 
-
-
-
-
-
-
-
-
-        self._page.controls.append(self._lvOut)
+        self._page.add(row1, row2, self._lvOut)
         self._page.update()
 
     @property
@@ -64,8 +59,6 @@ class View(ft.UserControl):
     def update_page(self):
         self._page.update()
 
-    def read_retailer(self, e):
-        self._retailer = e.control.data
 
 
 

@@ -6,7 +6,7 @@ from datetime import date
 class DailySale:
     Retailer_name: str
     Product: str
-    Date: date
+    Date: int
     Ricavo: float
 
 
